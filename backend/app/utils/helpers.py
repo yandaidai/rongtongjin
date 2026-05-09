@@ -1,0 +1,12 @@
+"""通用工具函数"""
+
+import random
+from datetime import datetime
+
+
+def generate_order_no(prefix: str = "RTJ") -> str:
+    """生成订单号：前缀 + 日期时间 + 随机数"""
+    now = datetime.now()
+    date_str = now.strftime("%Y%m%d%H%M%S")
+    rand_str = str(random.randint(1000, 9999))
+    return f"{prefix}{date_str}{rand_str}"

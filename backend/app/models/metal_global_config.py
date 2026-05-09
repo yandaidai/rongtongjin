@@ -1,0 +1,30 @@
+"""默认贵金属销售价&回购价点差模型"""
+
+from datetime import datetime
+
+from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, func
+from sqlalchemy.orm import Mapped, mapped_column
+
+from app.database import Base
+
+
+class MetalGlobalConfig(Base):
+    """默认贵金属销售价&回购价点差"""
+    __tablename__ = "metal_global_config"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    product_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("metal_product.id"), nullable=False, comment="贵金属品种ID"
+    )
+    sell_add_price: Mapped[float] = mapped_column(Float, default=3.0, comment="销售价加点（元/克）")
+    buy_back_sub_price: Mapped[float] = mapped_column(Float, default=2.0, comment="回购价减点（元/克）")
+    status: Mapped[bool] = mapped_column(Boolean, default=True, comment="状态：1-启用 0-禁用")
+    create_time: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), comment="创建时间"
+    )
+    update_time: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), comment="更新时间"
+    )
+
+    def __repr__(self) -> str:
+        return f"<MetalGlobalConfig(product_id={self.product_id}, sell_add={self.sell_add_price}, buy_back_sub={self.buy_back_sub_price})>"
