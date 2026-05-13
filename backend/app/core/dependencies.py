@@ -26,14 +26,14 @@ def get_current_user(
             detail="无效的认证凭据",
         )
 
-    user_id: int = payload.get("sub")
+    user_id = payload.get("sub")
     if user_id is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="无效的认证凭据",
         )
 
-    user = db.query(User).filter(User.id == user_id).first()
+    user = db.query(User).filter(User.id == int(user_id)).first()
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -56,9 +56,9 @@ def get_current_user_optional(
     if payload is None:
         return None
 
-    user_id: int = payload.get("sub")
+    user_id = payload.get("sub")
     if user_id is None:
         return None
 
-    user = db.query(User).filter(User.id == user_id).first()
+    user = db.query(User).filter(User.id == int(user_id)).first()
     return user
