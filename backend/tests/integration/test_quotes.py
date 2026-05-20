@@ -40,6 +40,7 @@ def test_get_quotes(client: TestClient, db_session: Session):
     _seed_data(db_session)
 
     response = client.get("/api/quotes/")
+    print(f'yjf check response: {response.json()}')
     assert response.status_code == 200
     data = response.json()
     assert len(data) == 1

@@ -19,10 +19,16 @@ class AuthService:
         """模拟生成验证码（生产环境接入真实短信服务）"""
         return "123456"  # 开发环境固定验证码
 
-    def _verify_code(self, phone: str, code: str) -> bool:
+    def _verify_code(self, code: str) -> bool:
         """验证验证码（生产环境接入真实短信服务）"""
         # 开发环境：固定验证码 123456
         return code == "123456"
+    
+    def _verify_phone_format(self, phone: str) -> bool:
+        """验证手机号格式"""
+        import re
+        pattern = re.compile(r"^\d{10,15}$")  # 简单的手机号格式验证
+        return bool(pattern.match(phone))
 
     def register(self, data: UserRegister) -> TokenResponse:
         """用户注册（手机验证码方式）"""
@@ -33,10 +39,17 @@ class AuthService:
             )
 
         # 验证验证码
-        if not self._verify_code(data.phone, data.code):
+        if not self._verify_code(data.code):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="验证码错误",
+            )
+    
+        # 验证手机号格式
+        if not self._verify_phone_format(data.phone):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="手机号格式错误",
             )
 
         # 检查手机号是否已注册

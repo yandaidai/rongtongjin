@@ -1,6 +1,7 @@
 """pytest 测试配置"""
 
 import pytest
+import os
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
@@ -12,6 +13,11 @@ from app.main import app
 TEST_DATABASE_URL = "sqlite:///./test.db"
 engine = create_engine(TEST_DATABASE_URL, connect_args={"check_same_thread": False})
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+
+# 创建日志目录
+if not os.path.exists("logs"):
+    os.makedirs("logs")
 
 
 def override_get_db():
