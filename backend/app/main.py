@@ -1,6 +1,6 @@
 """融通金 API - FastAPI 应用入口"""
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1 import auth, products, quotes, klines, global_config, user_config, warns
@@ -10,6 +10,13 @@ app = FastAPI(
     title=settings.APP_NAME,
     description="融通金 - 黄金回收/交易平台 API",
     version="2.0.0",
+    openapi_url="/openapi.json",
+    swagger_ui_parameters={
+        # 适配Safari渲染，强制使用中文字体
+        "customStyles": """
+        .swagger-ui { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; }
+        """
+    }
 )
 
 # CORS 配置（允许前端跨域访问）
@@ -34,7 +41,8 @@ app.include_router(warns.router, prefix="/api")
 @app.get("/")
 def root():
     """根路径"""
-    return {"message": "融通金 API 服务运行中", "version": "2.0.0"}
+    html = "<h1>融通金 API 服务</h1><p>欢迎使用融通金 API 服务！</p><p>请访问 <a href='/docs'>/docs</a> 查看 API 文档。</p>"
+    return Response(content=html, media_type="text/html")
 
 
 @app.get("/health")

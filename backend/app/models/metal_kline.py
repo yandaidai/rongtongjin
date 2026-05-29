@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, func
+from sqlalchemy import DateTime, Float, ForeignKey, Index, Integer, String, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -11,6 +11,10 @@ from app.database import Base
 class MetalKline(Base):
     """K线数据表"""
     __tablename__ = "metal_kline"
+
+    __table_args__ = (
+        Index("ix_metal_kline_product_type_time", "product_id", "k_type", "k_time"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     product_id: Mapped[int] = mapped_column(

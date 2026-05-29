@@ -27,8 +27,18 @@ class AuthService:
     def _verify_phone_format(self, phone: str) -> bool:
         """验证手机号格式"""
         import re
-        pattern = re.compile(r"^\d{10,15}$")  # 简单的手机号格式验证
+        pattern = re.compile(r"^\d{10,15}$")
         return bool(pattern.match(phone))
+
+    def _get_user_or_404(self, user_id: int) -> User:
+        """获取用户，不存在则抛 404"""
+        user = self.db.query(User).filter(User.id == user_id).first()
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="用户不存在",
+            )
+        return user
 
     def register(self, data: UserRegister) -> TokenResponse:
         """用户注册（手机验证码方式）"""
@@ -79,7 +89,7 @@ class AuthService:
     def login(self, data: UserLogin) -> TokenResponse:
         """用户登录（手机验证码方式）"""
         # 验证验证码
-        if not self._verify_code(data.phone, data.code):
+        if not self._verify_code(data.code):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="验证码错误",
@@ -108,22 +118,12 @@ class AuthService:
 
     def get_user_by_id(self, user_id: int) -> UserResponse:
         """获取用户信息"""
-        user = self.db.query(User).filter(User.id == user_id).first()
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="用户不存在",
-            )
+        user = self._get_user_or_404(user_id)
         return UserResponse.model_validate(user)
 
     def update_avatar(self, user_id: int, data: UserAvatarUpdate) -> UserResponse:
         """更新用户头像"""
-        user = self.db.query(User).filter(User.id == user_id).first()
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="用户不存在",
-            )
+        user = self._get_user_or_404(user_id)
         user.avatar = data.avatar
         self.db.commit()
         self.db.refresh(user)
@@ -131,12 +131,7 @@ class AuthService:
 
     def update_nickname(self, user_id: int, data: UserNicknameUpdate) -> UserResponse:
         """更新用户昵称"""
-        user = self.db.query(User).filter(User.id == user_id).first()
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="用户不存在",
-            )
+        user = self._get_user_or_404(user_id)
         user.nickname = data.nickname
         self.db.commit()
         self.db.refresh(user)
@@ -144,24 +139,14 @@ class AuthService:
 
     def set_password(self, user_id: int, data: UserPasswordUpdate) -> dict:
         """设置/更新密码"""
-        user = self.db.query(User).filter(User.id == user_id).first()
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="用户不存在",
-            )
+        user = self._get_user_or_404(user_id)
         user.hashed_password = hash_password(data.password)
         self.db.commit()
         return {"message": "密码设置成功"}
 
     def deactivate_account(self, user_id: int) -> dict:
         """注销账号"""
-        user = self.db.query(User).filter(User.id == user_id).first()
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="用户不存在",
-            )
+        user = self._get_user_or_404(user_id)
         user.status = False
         self.db.commit()
         return {"message": "账号已注销"}

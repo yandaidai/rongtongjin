@@ -16,15 +16,14 @@ class KlineService:
         k_type: str,
         limit: int = 100,
     ) -> list[MetalKlineResponse]:
-        """获取K线数据"""
+        """获取K线数据，按时间正序返回"""
         klines = self.db.query(MetalKline).filter(
             MetalKline.product_id == product_id,
             MetalKline.k_type == k_type,
         ).order_by(MetalKline.k_time.desc()).limit(limit).all()
 
         # 按时间正序返回
-        klines.reverse()
-        return [MetalKlineResponse.model_validate(k) for k in klines]
+        return [MetalKlineResponse.model_validate(k) for k in reversed(klines)]
 
     def get_latest_klines(
         self,
@@ -32,12 +31,5 @@ class KlineService:
         k_type: str,
         limit: int = 10,
     ) -> list[MetalKlineResponse]:
-        """获取最新的N条K线记录（用于价格记录列表展示）"""
-        klines = self.db.query(MetalKline).filter(
-            MetalKline.product_id == product_id,
-            MetalKline.k_type == k_type,
-        ).order_by(MetalKline.k_time.desc()).limit(limit).all()
-
-        # 按时间正序返回
-        klines.reverse()
-        return [MetalKlineResponse.model_validate(k) for k in klines]
+        """获取最新的N条K线记录（委托 get_klines，仅默认limit不同）"""
+        return self.get_klines(product_id, k_type, limit)

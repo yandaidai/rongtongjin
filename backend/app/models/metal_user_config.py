@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, func
+from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Index, Integer, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -11,6 +11,10 @@ from app.database import Base
 class MetalUserConfig(Base):
     """用户自定义贵金属销售价&回购价点差"""
     __tablename__ = "metal_user_config"
+
+    __table_args__ = (
+        Index("ix_metal_user_config_user_product", "user_id", "product_id"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(

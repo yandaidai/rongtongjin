@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.models.metal_global_config import MetalGlobalConfig
 from app.models.metal_product import MetalProduct
+from app.models.metal_quote import MetalQuote
 from app.models.metal_user_config import MetalUserConfig
 from app.schemas.metal_quote import MetalProductQuoteResponse, MetalQuoteResponse
 from app.services.akshare_service import AkshareQuote, AkshareService
@@ -60,25 +61,37 @@ class QuoteService:
 
         return None
 
-    def get_product_quotes(self, user_id: Optional[int] = None) -> list[MetalProductQuoteResponse]:
-        """获取所有产品的报价（含销售价、回购价计算）
-        大盘价从 akshare 实时获取，点差从数据库配置获取
-        """
+    # 国内品种代码集（对应上海黄金交易所品种）
+    DOMESTIC_CODES = {"Au99.99", "Au99.95", "Au100g", "Pt99.95", "Ag(T+D)", "Au(T+D)", "mAu(T+D)", "Ag99.99"}
+
+    # 国际品种代码映射
+    INTERNATIONAL_CODE_MAP = {
+        "XAU": "COMEX黄金",
+        "XAG": "COMEX白银",
+        "XPT": "NYMEX铂金",
+    }
+
+    def get_quotes_by_category(
+        self, category: str, user_id: Optional[int] = None
+    ) -> list[MetalProductQuoteResponse]:
+        """按类别获取行情报价"""
         products = self.db.query(MetalProduct).filter(
-            MetalProduct.status == True
+            MetalProduct.status == True,
         ).all()
+
+        if category == "domestic":
+            products = [p for p in products if p.code in self.DOMESTIC_CODES]
+        elif category == "international":
+            products = [p for p in products if p.code in self.INTERNATIONAL_CODE_MAP]
+        # else "all" — return everything
 
         result = []
         for product in products:
-            # 从 akshare 获取实时行情
             akshare_quote = self._get_akshare_quote(product.code)
             if not akshare_quote:
                 continue
 
-            # 获取点差
             sell_add, buy_back_sub = self._get_spread(product.id, user_id)
-
-            # 计算销售价和回购价
             sell_price = round(akshare_quote.price + sell_add, 2)
             buy_back_price = round(akshare_quote.price - buy_back_sub, 2)
 
@@ -98,14 +111,14 @@ class QuoteService:
 
         return result
 
-    def get_quote_history(self, product_id: int, limit: int = 10) -> list[MetalQuoteResponse]:
-        """获取指定品种的历史行情
-        注意：当前从数据库获取历史记录，后续可改为从 akshare 获取历史数据
-        """
-        from app.models.metal_quote import MetalQuote
+    def get_product_quotes(self, user_id: Optional[int] = None) -> list[MetalProductQuoteResponse]:
+        """获取所有产品的报价（含销售价、回购价计算）"""
+        return self.get_quotes_by_category("all", user_id)
 
+    def get_quote_history(self, product_id: int, limit: int = 10) -> list[MetalQuoteResponse]:
+        """获取指定品种的历史行情"""
         quotes = self.db.query(MetalQuote).filter(
             MetalQuote.product_id == product_id
         ).order_by(MetalQuote.quote_time.desc()).limit(limit).all()
 
-        return [MetalQuoteResponse.model_validate(q) for q in quotes]
+        return [MetalQuoteResponse.model_validate(q) for q in reversed(quotes)]

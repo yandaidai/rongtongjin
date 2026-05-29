@@ -1,6 +1,7 @@
 """实时行情接口测试"""
 
 from datetime import datetime, timezone
+from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
@@ -8,6 +9,7 @@ from sqlalchemy.orm import Session
 from app.models.metal_global_config import MetalGlobalConfig
 from app.models.metal_product import MetalProduct
 from app.models.metal_quote import MetalQuote
+from app.services.akshare_service import AkshareQuote
 
 
 def _seed_data(db_session: Session):
@@ -35,20 +37,32 @@ def _seed_data(db_session: Session):
     return product.id
 
 
-def test_get_quotes(client: TestClient, db_session: Session):
+def _mock_akshare_quote(*args, **kwargs):
+    """模拟 akshare 实时行情返回"""
+    return AkshareQuote(
+        product_code="Au99.99",
+        price=450.0,
+        open=448.0,
+        high=452.0,
+        low=447.0,
+        rise=2.0,
+        rise_rate=0.44,
+        quote_time=datetime.now(timezone.utc),
+    )
+
+
+@patch("app.services.quote_service.AkshareService.get_sge_quote", side_effect=_mock_akshare_quote)
+def test_get_quotes(mock_get_sge, client: TestClient, db_session: Session):
     """测试获取报价"""
     _seed_data(db_session)
 
     response = client.get("/api/quotes/")
-    print(f'yjf check response: {response.json()}')
     assert response.status_code == 200
     data = response.json()
     assert len(data) == 1
     assert data[0]["product_code"] == "Au99.99"
     assert data[0]["market_price"] == 450.0
-    # 销售价 = 大盘价 + 点差
     assert data[0]["sell_price"] == 453.0
-    # 回购价 = 大盘价 - 点差
     assert data[0]["buy_back_price"] == 448.0
 
 

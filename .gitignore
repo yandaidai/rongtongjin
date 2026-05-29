@@ -10,6 +10,9 @@ build/
 *.egg
 venv/
 .env
+tests/logs/
+tests/**/*.log
+*.log
 
 # Node / Expo
 node_modules/
