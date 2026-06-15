@@ -11,30 +11,10 @@ import sys
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
+from app.constants import ALL_PRODUCTS
 from app.database import Base
 from app.models.metal_global_config import MetalGlobalConfig
 from app.models.metal_product import MetalProduct
-
-# 国内 SGE 品种
-DOMESTIC_PRODUCTS = [
-    {"code": "Au99.99", "name": "黄金99.99", "unit": "元/克"},
-    {"code": "Au99.95", "name": "黄金99.95", "unit": "元/克"},
-    {"code": "Au100g",  "name": "黄金100克", "unit": "元/克"},
-    {"code": "Pt99.95", "name": "铂金99.95", "unit": "元/克"},
-    {"code": "Ag(T+D)", "name": "白银延期",  "unit": "元/千克"},
-    {"code": "Au(T+D)", "name": "黄金延期",  "unit": "元/克"},
-    {"code": "mAu(T+D)","name": "迷你黄金延期", "unit": "元/克"},
-    {"code": "Ag99.99", "name": "白银99.99", "unit": "元/千克"},
-]
-
-# 国际品种
-INTERNATIONAL_PRODUCTS = [
-    {"code": "XAU", "name": "国际现货黄金", "unit": "美元/盎司"},
-    {"code": "XAG", "name": "国际现货白银", "unit": "美元/盎司"},
-    {"code": "XPT", "name": "国际现货铂金", "unit": "美元/盎司"},
-]
-
-ALL_PRODUCTS = DOMESTIC_PRODUCTS + INTERNATIONAL_PRODUCTS
 
 
 def seed(db: Session):

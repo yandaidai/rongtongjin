@@ -1,6 +1,10 @@
 """应用配置管理"""
 
+import logging
+
 from pydantic_settings import BaseSettings
+
+logger = logging.getLogger(__name__)
 
 
 class Settings(BaseSettings):
@@ -26,6 +30,15 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "your-secret-key-change-in-production"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24 小时
+
+    @property
+    def effective_secret_key(self) -> str:
+        """返回有效密钥，并在使用默认值时发出警告"""
+        if self.SECRET_KEY in ("", "your-secret-key-change-in-production"):
+            logger.warning(
+                "SECRET_KEY 使用默认值，生产环境请在 .env 或环境变量中设置 SECRET_KEY"
+            )
+        return self.SECRET_KEY
 
     class Config:
         env_file = ".env"

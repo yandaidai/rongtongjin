@@ -5,6 +5,7 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 
+from app.constants import DOMESTIC_CODES, INTERNATIONAL_CODE_MAP
 from app.models.metal_global_config import MetalGlobalConfig
 from app.models.metal_product import MetalProduct
 from app.models.metal_quote import MetalQuote
@@ -50,26 +51,11 @@ class QuoteService:
             return quote
 
         # 如果 SGE 没有，尝试国际行情
-        # 根据品种代码映射到国际行情名称
-        international_map = {
-            "XAU": "COMEX黄金",       # 国际现货黄金 -> COMEX黄金当月连续
-            "XAG": "COMEX白银",       # 国际现货白银 -> COMEX白银当月连续
-            "XPT": "NYMEX铂金",       # 国际现货铂金 -> NYMEX铂金当月连续
-        }
-        if product_code in international_map:
-            return AkshareService.get_international_quote(international_map[product_code])
+        name_keyword = INTERNATIONAL_CODE_MAP.get(product_code)
+        if name_keyword:
+            return AkshareService.get_international_quote(name_keyword)
 
         return None
-
-    # 国内品种代码集（对应上海黄金交易所品种）
-    DOMESTIC_CODES = {"Au99.99", "Au99.95", "Au100g", "Pt99.95", "Ag(T+D)", "Au(T+D)", "mAu(T+D)", "Ag99.99"}
-
-    # 国际品种代码映射
-    INTERNATIONAL_CODE_MAP = {
-        "XAU": "COMEX黄金",
-        "XAG": "COMEX白银",
-        "XPT": "NYMEX铂金",
-    }
 
     def get_quotes_by_category(
         self, category: str, user_id: Optional[int] = None
@@ -80,9 +66,9 @@ class QuoteService:
         ).all()
 
         if category == "domestic":
-            products = [p for p in products if p.code in self.DOMESTIC_CODES]
+            products = [p for p in products if p.code in DOMESTIC_CODES]
         elif category == "international":
-            products = [p for p in products if p.code in self.INTERNATIONAL_CODE_MAP]
+            products = [p for p in products if p.code in INTERNATIONAL_CODE_MAP]
         # else "all" — return everything
 
         result = []

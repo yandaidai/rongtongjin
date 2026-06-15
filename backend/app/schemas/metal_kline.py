@@ -18,9 +18,3 @@ class MetalKlineResponse(BaseModel):
     k_time: datetime
 
     model_config = {"from_attributes": True}
-
-
-class MetalKlineListResponse(BaseModel):
-    """K线数据列表响应"""
-    items: list[MetalKlineResponse]
-    total: int

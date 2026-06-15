@@ -49,6 +49,7 @@ export default function KlineChart({ data, title }: Props) {
       {/* 简化折线图 */}
       <View style={styles.chart}>
         {prices.map((p, i) => {
+          const prevPrice = i > 0 ? (prices[i - 1] ?? p) : data[0]?.open_price ?? p;
           const height = ((p - min) / range) * 120;
           return (
             <View
@@ -57,7 +58,7 @@ export default function KlineChart({ data, title }: Props) {
                 styles.bar,
                 {
                   height: Math.max(height, 2),
-                  backgroundColor: p >= (prices[i - 1] ?? p) ? '#e74c3c' : '#2ecc71',
+                  backgroundColor: p >= prevPrice ? '#e74c3c' : '#2ecc71',
                 },
               ]}
             />
@@ -71,7 +72,7 @@ export default function KlineChart({ data, title }: Props) {
           开 {data[0]?.open_price.toFixed(2)}
         </Text>
         <Text style={styles.rangeLabel}>
-          昨收 {data[0]?.close_price.toFixed(2)}
+          昨收 {data[data.length - 1]?.close_price.toFixed(2)}
         </Text>
       </View>
     </View>

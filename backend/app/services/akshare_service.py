@@ -1,10 +1,15 @@
 """akshare 贵金属行情服务 - 从 akshare 获取实时贵金属价格"""
 
+import logging
 from datetime import datetime, timezone
 from typing import Optional
 
 import akshare as ak  # type: ignore[import-untyped]
 import pandas as pd
+
+from app.constants import SGE_SYMBOLS
+
+logger = logging.getLogger(__name__)
 
 
 class AkshareQuote:
@@ -33,28 +38,20 @@ class AkshareQuote:
 class AkshareService:
     """akshare 贵金属行情服务"""
 
-    # SGE 品种映射：product_code -> akshare symbol
-    SGE_SYMBOLS = {
-        "Au99.99": "Au99.99",
-        "Au99.95": "Au99.95",
-        "Au100g": "Au100g",
-        "Pt99.95": "Pt99.95",
-        "Ag(T+D)": "Ag(T+D)",
-        "Au(T+D)": "Au(T+D)",
-        "mAu(T+D)": "mAu(T+D)",
-        "Ag99.99": "Ag99.99",
-    }
+    # 符号映射从 constants.py 统一管理
+    SGE_SYMBOLS = SGE_SYMBOLS
 
     @staticmethod
     def get_sge_quote(product_code: str) -> Optional[AkshareQuote]:
         """获取上海黄金交易所指定品种的实时行情"""
-        symbol = AkshareService.SGE_SYMBOLS.get(product_code)
+        symbol = SGE_SYMBOLS.get(product_code)
         if not symbol:
             return None
 
         try:
             df = ak.spot_quotations_sge(symbol=symbol)
             if df.empty:
+                logger.warning("akshare SGE 返回空数据: %s", product_code)
                 return None
 
             # 取最新一条数据
@@ -78,13 +75,14 @@ class AkshareService:
                 quote_time=quote_time,
             )
         except Exception:
+            logger.exception("akshare SGE 查询失败: %s", product_code)
             return None
 
     @staticmethod
     def get_all_sge_quotes() -> dict[str, AkshareQuote]:
         """获取所有 SGE 品种的实时行情"""
         result = {}
-        for code in AkshareService.SGE_SYMBOLS:
+        for code in SGE_SYMBOLS:
             quote = AkshareService.get_sge_quote(code)
             if quote:
                 result[code] = quote
@@ -93,18 +91,20 @@ class AkshareService:
     @staticmethod
     def get_international_quote(name_keyword: str) -> Optional[AkshareQuote]:
         """获取国际贵金属行情（从 futures_global_spot_em）
-        
+
         Args:
             name_keyword: 品种名称关键词，如 'COMEX黄金', 'COMEX白银', 'NYMEX铂金'
         """
         try:
             df = ak.futures_global_spot_em()
             if df.empty:
+                logger.warning("akshare 国际行情返回空数据: %s", name_keyword)
                 return None
 
             # 查找当月连续合约（名称完全匹配）
             mask = df["名称"] == name_keyword
             if not mask.any():
+                logger.warning("akshare 未找到国际行情品种: %s", name_keyword)
                 return None
 
             row = df[mask].iloc[0]
@@ -126,4 +126,5 @@ class AkshareService:
                 quote_time=datetime.now(timezone.utc),
             )
         except Exception:
+            logger.exception("akshare 国际行情查询失败: %s", name_keyword)
             return None

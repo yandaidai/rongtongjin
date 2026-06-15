@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+  xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+  xmlns:s="http://schemas.openxmlformats.org/officeDocument/2006/sharedTypes"
+  xmlns="http://schemas.openxmlformats.org/drawingml/2006/main"
+  targetNamespace="http://schemas.openxmlformats.org/drawingml/2006/main"
+  elementFormDefault="qualified">
+  <xsd:import namespace="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+    schemaLocation="shared-relationshipReference.xsd"/>
+  <xsd:import namespace="http://schemas.openxmlformats.org/officeDocument/2006/sharedTypes"
+    schemaLocation="shared-commonSimpleTypes.xsd"/>
+  <xsd:import namespace="http://schemas.openxmlformats.org/drawingml/2006/diagram"
+    schemaLocation="dml-diagram.xsd"/>
+  <xsd:import namespace="http://schemas.openxmlformats.org/drawingml/2006/chart"
+    schemaLocation="dml-chart.xsd"/>
+  <xsd:import namespace="http://schemas.openxmlformats.org/drawingml/2006/picture"
+    schemaLocation="dml-picture.xsd"/>
+  <xsd:import namespace="http://schemas.openxmlformats.org/drawingml/2006/lockedCanvas"
+    schemaLocation="dml-lockedCanvas.xsd"/>
+  <xsd:complexType name="CT_AudioFile">
+    <xsd:sequence>
+      <xsd:element name="extLst" type="CT_OfficeArtExtensionList" minOccurs="0" maxOccurs="1"/>
+    </xsd:sequence>
+    <xsd:attribute ref="r:link" use="required"/>
+    <xsd:attribute name="contentType" type="xsd:string" use="optional"/>
+  </xsd:complexType>
+  <xsd:complexType name="CT_VideoFile">
+    <xsd:sequence>
+      <xsd:element name="extLst" type="CT_OfficeArtExtensionList" minOccurs="0" maxOccurs="1"/>
+    </xsd:sequence>
+    <xsd:attribute ref="r:link" use="required"/>
+    <xsd:attribute name="contentType" type="xsd:string" use="optional"/>
+  </xsd:complexType>
+  <xsd:complexType name="CT_QuickTimeFile">
+    <xsd:sequence>
+      <xsd:element name="extLst" type="CT_OfficeArtExtensionList" minOccurs="0" maxOccurs="1"/>
+    </xsd:sequence>
+    <xsd:attribute ref="r:link" use="required"/>
+  </xsd:complexType>
+  <xsd:complexType name="CT_AudioCDTime">
+    <xsd:attribute name="track" type="xsd:unsignedByte" use="required"/>
+    <xsd:attribute name="time" type="xsd:unsignedInt" use="optional" default="0"/>
+  </xsd:complexType>
+  <xsd:complexType name="CT_AudioCD">
+    <xsd:sequence>
+      <xsd:element name="st" type="CT_AudioCDTime" minOccurs="1" maxOccurs="1"/>
+      <xsd:element name="end" type="CT_AudioCDTime" minOccurs="1" maxOccurs="1"/>
+      <xsd:element name="extLst" type="CT_OfficeArtExtensionList" minOccurs="0" maxOccurs="1"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:group name="EG_Media">
+    <xsd:choice>
+      <xsd:element name="audioCd" type="CT_AudioCD"/>
+      <xsd:element name="wavAudioFile" type="CT_EmbeddedWAVAudioFile"/>
+      <xsd:element name="audioFile" type="CT_AudioFile"/>
+      <xsd:element name="videoFile" type="CT_VideoFile"/>
+      <xsd:element name="quickTimeFile" type="CT_QuickTimeFile"/>
+    </xsd:choice>
+  </xsd:group>
+  <xsd:element name="videoFile" type="CT_VideoFile"/>
+  <xsd:simpleType name="ST_StyleMatrixColumnIndex">
+    <xsd:restriction base="xsd:unsignedInt"/>
+  </xsd:simpleType>
+  <xsd:simpleType name="ST_FontCollectionIndex">
+    <xsd:restriction base="xsd:token">
+      <xsd:enumeration value="major"/>
+      <xsd:enumeration value="minor"/>
+      <xsd:enumeration value="none"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="ST_ColorSchemeIndex">
+    <xsd:restriction base="xsd:token">
+      <xsd:enumeration value="dk1"/>
+      <xsd:enumeration value="lt1"/>
+      <xsd:enumeration value="dk2"/>
+      <xsd:enumeration value="lt2"/>
+      <xsd:enumeration value="accent1"/>
+      <xsd:enumeration value="accent2"/>
+      <xsd:enumeration value="accent3"/>
+      <xsd:enumeration value="accent4"/>
+      <xsd:enumeration value="accent5"/>
+      <xsd:enumeration value="accent6"/>
+      <xsd:enumeration value="hlink"/>
+      <xsd:enumeration value="folHlink"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:complexType name="CT_ColorScheme">
+    <xsd:sequence>
+      <xsd:element name="dk1" type="CT_Color" minOccurs="1" maxOccurs="1"/>
+      <xsd:element name="lt1" type="CT_Color" minOccurs="1" maxOccurs="1"/>
+      <xsd:element name="dk2" type="CT_Color" minOccurs="1" maxOccurs="1"/>
+      <xsd:element name="lt2" type="CT_Color" minOccurs="1" maxOccurs="1"/>
+      <xsd:element name="accent1" type="CT_Color" minOccurs="1" maxOccurs="1"/>
+      <xsd:element name="accent2" type="CT_Color" minOccurs="1" maxOccurs="1"/>
+      <xsd:element name="accent3" type="CT_Color" minOccurs="1" maxOccurs="1"/>
+      <xsd:element name="accent4" type="CT_Color" minOccurs="1" maxOccurs="1"/>
+      <xsd:element name="accent5" type="CT_Color" minOccurs="1" maxOccurs="1"/>
+      <xsd:element name="accent6" type="CT_Color" minOccurs="1" maxOccurs="1"/>
+      <xsd:element name="hlink" type="CT_Color" minOccurs="1" maxOccurs="1"/>
+      <xsd:element name="folHlink" type="CT_Color" minOccurs="1" maxOccurs="1"/>
+      <xsd:element name="extLst" type="CT_OfficeArtExtensionList" minOccurs="0" maxOccurs="1"/>
+    </xsd:sequence>
+    <xsd:attribute name="name" type="xsd:string" use="required"/>
+  </xsd:complexType>
+  <xsd:complexType name="CT_CustomColor">
+    <xsd:sequence>
+      <xsd:group ref="EG_ColorChoice" minOccurs="1" maxOccurs="1"/>
+    </xsd:sequence>
+    <xsd:attribute name="name" type="xsd:string" use="optional" default=""/>
+  </xsd:complexType>
+  <xsd:complexType name="CT_SupplementalFont">
+    <xsd:attribute name="script" type="xsd:string" use="required"/>
+    <xsd:attribute name="typeface" type="ST_TextTypeface" use="required"/>
+  </xsd:complexType>
+  <xsd:complexType name="CT_CustomColorList">
+    <xsd:sequence>
+      <xsd:element name="custClr" type="CT_CustomColor" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_FontCollection">
+    <xsd:sequence>
+      <xsd:element name="latin" type="CT_TextFont" minOccurs="1" maxOccurs="1"/>
+      <xsd:element name="ea" type="CT_TextFont" minOccurs="1" maxOccurs="1"/>
+      <xsd:element name="cs" type="CT_TextFont" minOccurs="1" maxOccurs="1"/>
+      <xsd:element name="font" type="CT_SupplementalFont" minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="extLst" type="CT_OfficeArtExtensionList" minOccurs="0" maxOccurs="1"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_EffectStyleItem">
+    <xsd:sequence>
+      <xsd:group ref="EG_EffectProperties" minOccurs="1" maxOccurs="1"/>
+      <xsd:element name="scene3d" type="CT_Scene3D" minOccurs="0" maxOccurs="1"/>
+      <xsd:element name="sp3d" type="CT_Shape3D" minOccurs="0" maxOccurs="1"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_FontScheme">
+    <xsd:sequence>
+      <xsd:element name="majorFont" type="CT_FontCollection" minOccurs="1" maxOccurs="1"/>
+      <xsd:element name="minorFont" type="CT_FontCollection" minOccurs="1" maxOccurs="1"/>
+      <xsd:element name="extLst" type="CT_OfficeArtExtensionList" minOccurs="0" maxOccurs="1"/>
+    </xsd:sequence>
+    <xsd:attribute name="name" type="xsd:string" use="required"/>
+  </xsd:complexType>
+  <xsd:complexType name="CT_FillStyleList">
+    <xsd:sequence>
+      <xsd:group ref="EG_FillProperties" minOccurs="3" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_LineStyleList">
+    <xsd:sequence>
+      <xsd:element name="ln" type="CT_LineProperties" minOccurs="3" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_EffectStyleList">
+    <xsd:sequence>
+      <xsd:element name="effectStyle" type="CT_EffectStyleItem" minOccurs="3" maxOccurs="unbounded"
+      />
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_BackgroundFillStyleList">
+    <xsd:sequence>
+      <xsd:group ref="EG_FillProperties" minOccurs="3" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_StyleMatrix">
+    <xsd:sequence>
+      <xsd:element name="fillStyleLst" type="CT_FillStyleList" minOccurs="1" maxOccurs="1"/>
+      <xsd:element name="lnStyleLst" type="CT_LineStyleList" minOccurs="1" maxOccurs="1"/>
+      <xsd:element name="effectStyleLst" type="CT_EffectStyleList" minOccurs="1" maxOccurs="1"/>
+      <xsd:element name="bgFillStyleLst" type="CT_BackgroundFillStyleList" minOccurs="1"
+        maxOccurs="1"/>
+    </xsd:sequence>
+    <xsd:attribute name="name" type="xsd:string" use="optional" default=""/>
+  </xsd:complexType>
+  <xsd:complexType name="CT_BaseStyles">
+    <xsd:sequence>
+      <xsd:element name="clrScheme" type="CT_ColorScheme" minOccurs="1" maxOccurs="1"/>
+      <xsd:element name="fontScheme" type="CT_FontScheme" minOccurs="1" maxOccurs="1"/>
+      <xsd:element name="fmtScheme" type="CT_StyleMatrix" minOccurs="1" maxOccurs="1"/>
+      <xsd:element name="extLst" type="CT_OfficeArtExtensionList" minOccurs="0" maxOccurs="1"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="CT_OfficeArtExtension">
+    <xsd:sequence>
+      <xsd:any processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+    <xsd:attribute name="uri" type="xsd:token" use="required"/>
+  </xsd:complexType>
+  <xsd:simpleType name="ST_Coordinate">
+    <xsd:union memberTypes="ST_CoordinateUnqualified s:ST_UniversalMeasure"/>
+  </xsd:simpleType>
+  <xsd:simpleType name="ST_CoordinateUnqualified">
+    <xsd:restriction base="xsd:long">
+      <xsd:minInclusive value="-27273042329600"/>
+      <xsd:maxInclusive value="27273042316900"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="ST_Coordinate32">
+    <xsd:union memberTypes="ST_Coordinate32Unqualified s:ST_UniversalMeasure"/>
+  </xsd:simpleType>
+  <xsd:simpleType name="ST_Coordinate32Unqualified">
+    <xsd:restriction base="xsd:int"/>
+  </xsd:simpleType>
+  <xsd:simpleType name="ST_PositiveCoordinate">
+    <xsd:restriction base="xsd:long">
+      <xsd:minInclusive value="0"/>
+      <xsd:maxInclusive value="27273042316900"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="ST_PositiveCoordinate32">
+    <xsd:restriction base="ST_Coordinate32Unqualified">
+      <xsd:minInclusive value="0"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="ST_Angle">
+    <xsd:restriction base="xsd:int"/>
+  </xsd:simpleType>
+  <xsd:complexType name="CT_Angle">
+    <xsd:attribute name="val" type="ST_Angle" use="required"/>
+  </xsd:complexType>
+  <xsd:simpleType name="ST_FixedAngle">
+    <xsd:restriction base="ST_Angle">
+      <xsd:minExclusive value="-5400000"/>
+      <xsd:maxExclusive value="5400000"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="ST_PositiveFixedAngle">
+    <xsd:restriction base="ST_Angle">
+      <xsd:minInclusive value="0"/>
+      <xsd:maxExclusive value="21600000"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:complexType name="CT_PositiveFixedAngle">
+    <xsd:attribute name="val" type="ST_PositiveFixedAngle" use="required"/>
+  </xsd:complexType>
+  <xsd:simpleType name="ST_Percentage">
+    <xsd:union memberTypes="ST_PercentageDecimal s:ST_Percentage"/>
+  </xsd:simpleType>
+  <xsd:simpleType name="ST_PercentageDecimal">
+    <xsd:restriction base="xsd:int"/>
+  </xsd:simpleType>
+  <xsd:complexType name="CT_Percentage">
+    <xsd:attribute name="val" type="ST_Percentage" use="required"/>
+  </xsd:complexType>
+  <xsd:simpleType name="ST_PositivePercentage">
+    <xsd:union memberTypes="ST_PositivePercentageDecimal s:ST_PositivePercentage"/>
+  </xsd:simpleType>
+  <xsd:simpleType name="ST_PositivePercentageDecimal">
+    <xsd:restriction base="ST_PercentageDecimal">
+      <xsd:minInclusive value="0"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:complexType name="CT_PositivePercentage">
+    <xsd:attribute name="val" type="ST_PositivePercentage" use="required"/>
+  </xsd:complexType>
+  <xsd:simpleType name="ST_FixedPercentage">
+    <xsd:union memberTypes="ST_FixedPercentageDecimal s:ST_FixedPercentage"/>
+  </xsd:simpleType>
+  <xsd:simpleType name="ST_FixedPercentageDecimal">
+    <xsd:restriction base="ST_PercentageDecimal">
+      <xsd:minInclusive value="-100000"/>
+      <xsd:maxInclusive value="100000"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:complexType name="CT_FixedPercentage">
+    <xsd:attribute name="val" type="ST_FixedPercentage" use="required"/>
+  </xsd:complexType>
+  <xsd:simpleType name="ST_PositiveFixedPercentage">
+    <xsd:union memberTypes="ST_PositiveFixedPercentageDecimal s:ST_PositiveFixedPercentage"/>
+  </xsd:simpleType>
+  <xsd:simpleType name="ST_PositiveFixedPercentageDecimal">
+    <xsd:restriction base="ST_PercentageDecimal">
+      <xsd:minInclusive value="0"/>
+      <xsd:maxInclusive value="100000"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:complexType name="CT_PositiveFixedPercentage">
+    <xsd:attribute name="val" type="ST_PositiveFixedPercentage" use="required"/>
+  </xsd:complexType>
+  <xsd:complexType name="CT_Ratio">
+    <xsd:attribute name="n" type="xsd:long" use="required"/>
+    <xsd:attribute name="d" type="xsd:long" use="required"/>
+  </xsd:complexType>
+  <xsd:complexType name="CT_Point2D">
+    <xsd:attribute name="x" type="ST_Coordinate" use="required"/>
+    <xsd:attribute name="y" type="ST_Coordinate" use="required"/>
+  </xsd:complexType>
+  <xsd:complexType name="CT_PositiveSize2D">
+    <xsd:attribute name="cx" type="ST_PositiveCoordinate" use="required"/>
+    <xsd:attribute name="cy" type="ST_PositiveCoordinate" use="required"/>
+  </xsd:complexType>
+  <xsd:complexType name="CT_ComplementTransform"/>
+  <xsd:complexType name="CT_InverseTransform"/>
+  <xsd:complexType name="CT_GrayscaleTransform"/>
+  <xsd:complexType name="CT_GammaTransform"/>
+  <xsd:complexType name="CT_InverseGammaTransform"/>
+  <xsd:group name="EG_ColorTransform">
+    <xsd:choice>
+      <xsd:element name="tint" type="CT_

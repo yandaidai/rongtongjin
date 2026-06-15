@@ -25,11 +25,3 @@ class KlineService:
         # 按时间正序返回
         return [MetalKlineResponse.model_validate(k) for k in reversed(klines)]
 
-    def get_latest_klines(
-        self,
-        product_id: int,
-        k_type: str,
-        limit: int = 10,
-    ) -> list[MetalKlineResponse]:
-        """获取最新的N条K线记录（委托 get_klines，仅默认limit不同）"""
-        return self.get_klines(product_id, k_type, limit)

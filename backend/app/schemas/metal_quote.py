@@ -34,9 +34,3 @@ class MetalProductQuoteResponse(BaseModel):
     rise: float
     rise_rate: float
     quote_time: datetime
-
-
-class MetalQuoteListResponse(BaseModel):
-    """实时行情列表响应"""
-    items: list[MetalQuoteResponse]
-    total: int

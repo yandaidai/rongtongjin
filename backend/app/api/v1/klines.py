@@ -31,4 +31,4 @@ def get_latest_klines(
 ):
     """获取最新的N条K线记录（用于价格记录列表展示）"""
     service = KlineService(db)
-    return service.get_latest_klines(product_id, k_type, limit)
+    return service.get_klines(product_id, k_type, limit)

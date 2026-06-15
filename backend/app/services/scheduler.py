@@ -4,41 +4,32 @@ import logging
 from datetime import datetime, timezone
 
 from apscheduler.schedulers.background import BackgroundScheduler
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, sessionmaker
 
-from app.config import settings
+from app.constants import INTERNATIONAL_CODE_MAP, SGE_SYMBOLS
+from app.database import get_db_session
 from app.models.metal_kline import MetalKline
 from app.models.metal_product import MetalProduct
 from app.models.metal_quote import MetalQuote
 from app.services.akshare_service import AkshareService
-from app.services.quote_service import QuoteService
 
 logger = logging.getLogger(__name__)
 
 scheduler = BackgroundScheduler()
 
 
-def _get_session() -> Session:
-    """创建独立数据库会话（不依赖 FastAPI 注入）"""
-    engine = create_engine(settings.db_url)
-    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-    return SessionLocal()
-
-
 def refresh_quotes():
     """定时刷新所有品种的大盘行情并保存到数据库"""
-    db = _get_session()
+    db = get_db_session()
     try:
         products = db.query(MetalProduct).filter(MetalProduct.status == True).all()
         now = datetime.now(timezone.utc)
 
         for product in products:
             quote = None
-            if product.code in AkshareService.SGE_SYMBOLS:
+            if product.code in SGE_SYMBOLS:
                 quote = AkshareService.get_sge_quote(product.code)
-            elif product.code in QuoteService.INTERNATIONAL_CODE_MAP:
-                name_keyword = QuoteService.INTERNATIONAL_CODE_MAP[product.code]
+            elif product.code in INTERNATIONAL_CODE_MAP:
+                name_keyword = INTERNATIONAL_CODE_MAP[product.code]
                 quote = AkshareService.get_international_quote(name_keyword)
 
             if quote is None:
@@ -56,14 +47,25 @@ def refresh_quotes():
                 quote_time=quote.quote_time or now,
             ))
 
-            # 写入 K 线数据（以分钟 K 线维度存储）
+            # 计算真实的 K 线 OHLC（基于上一分钟收盘价）
+            prev_kline = db.query(MetalKline).filter(
+                MetalKline.product_id == product.id,
+                MetalKline.k_type == "minute",
+            ).order_by(MetalKline.k_time.desc()).first()
+
+            prev_close = prev_kline.close_price if prev_kline else quote.price
+            open_price = prev_close
+            high_price = max(prev_close, quote.price)
+            low_price = min(prev_close, quote.price)
+            close_price = quote.price
+
             db.add(MetalKline(
                 product_id=product.id,
                 k_type="minute",
-                open_price=quote.price,
-                high_price=quote.price,
-                low_price=quote.price,
-                close_price=quote.price,
+                open_price=open_price,
+                high_price=high_price,
+                low_price=low_price,
+                close_price=close_price,
                 volume=0.0,
                 k_time=quote.quote_time or now,
             ))

@@ -1,6 +1,5 @@
 """贵金属品种 API 路由"""
-
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -14,4 +13,8 @@ router = APIRouter(prefix="/products", tags=["贵金属品种"])
 def get_products(db: Session = Depends(get_db)):
     """获取所有启用的贵金属品种"""
     service = ProductService(db)
-    return service.get_all_products()
+    try:
+        return service.get_all_products()
+    except Exception as e:
+        print(f"Error fetching products: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch products")

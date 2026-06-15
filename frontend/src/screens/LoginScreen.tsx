@@ -1,16 +1,30 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
   Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text,
   TextInput, TouchableOpacity, View,
 } from 'react-native';
 import { useAuth } from '../store/AuthContext';
 
-export default function LoginScreen({ navigation }: any) {
+type LoginNavProp = NativeStackNavigationProp<Record<string, undefined>, 'Login'>;
+
+export default function LoginScreen({ navigation }: { navigation: LoginNavProp }) {
   const { login } = useAuth();
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [countdown, setCountdown] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // 组件卸载时清除倒计时定时器，防止内存泄漏
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, []);
 
   const sendCode = () => {
     if (phone.length < 10) {
@@ -20,9 +34,15 @@ export default function LoginScreen({ navigation }: any) {
     // 生产环境：调用真实短信接口
     Alert.alert('提示', `验证码已发送至 ${phone}（开发环境固定 123456）`);
     setCountdown(60);
-    const timer = setInterval(() => {
+    timerRef.current = setInterval(() => {
       setCountdown((c) => {
-        if (c <= 1) { clearInterval(timer); return 0; }
+        if (c <= 1) {
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+          }
+          return 0;
+        }
         return c - 1;
       });
     }, 1000);
@@ -36,8 +56,8 @@ export default function LoginScreen({ navigation }: any) {
     setLoading(true);
     try {
       await login(phone, code);
-    } catch (e: any) {
-      Alert.alert('登录失败', e.message);
+    } catch (e: unknown) {
+      Alert.alert('登录失败', e instanceof Error ? e.message : '未知错误');
     } finally {
       setLoading(false);
     }

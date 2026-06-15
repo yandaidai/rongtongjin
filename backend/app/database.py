@@ -3,7 +3,7 @@
 from typing import Optional
 
 from sqlalchemy import create_engine
-from sqlalchemy.orm import DeclarativeBase, sessionmaker
+from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
 from app.config import settings
 
@@ -13,10 +13,10 @@ SessionLocal = None
 
 
 def init_db(db_url: Optional[str] = None, echo: bool = False):
-    """初始化数据库连接"""
+    """初始化数据库连接（测试可以传入 db_url 覆盖）"""
     global engine, SessionLocal
     url = db_url or settings.db_url
-    engine = create_engine(url, echo=echo)
+    engine = create_engine(url, echo=echo, pool_size=5, max_overflow=10)
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
@@ -25,7 +25,7 @@ class Base(DeclarativeBase):
 
 
 def get_db():
-    """获取数据库会话的依赖注入"""
+    """获取数据库会话（FastAPI 依赖注入，请求结束时自动关闭）"""
     global engine, SessionLocal
     if SessionLocal is None:
         init_db(echo=settings.DEBUG)
@@ -34,3 +34,14 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+def get_db_session() -> Session:
+    """获取独立数据库会话（用于独立于 FastAPI 请求周期的场景，如 scheduler）
+
+    复用 app 的连接池，而不是每次新建 engine。
+    """
+    global engine, SessionLocal
+    if SessionLocal is None:
+        init_db(echo=settings.DEBUG)
+    return SessionLocal()
