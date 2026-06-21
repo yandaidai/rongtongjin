@@ -68,6 +68,13 @@ class ApiClient {
     });
   }
 
+  loginViaPassword(phone: string, password: string, agree_protocol: boolean) {
+    return this.request<import('../types').TokenResponse>('/auth/login/password', {
+      method: 'POST',
+      body: JSON.stringify({ phone, password, agree_protocol }),
+    });
+  }
+
   register(phone: string, code: string, agree_protocol: boolean) {
     return this.request<import('../types').TokenResponse>('/auth/register', {
       method: 'POST',

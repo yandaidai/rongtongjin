@@ -34,14 +34,3 @@ def get_db():
         yield db
     finally:
         db.close()
-
-
-def get_db_session() -> Session:
-    """获取独立数据库会话（用于独立于 FastAPI 请求周期的场景，如 scheduler）
-
-    复用 app 的连接池，而不是每次新建 engine。
-    """
-    global engine, SessionLocal
-    if SessionLocal is None:
-        init_db(echo=settings.DEBUG)
-    return SessionLocal()

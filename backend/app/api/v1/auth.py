@@ -8,7 +8,7 @@ from app.database import get_db
 from app.models.user import User
 from app.schemas.user import (
     TokenResponse, UserAvatarUpdate, UserLogin, UserNicknameUpdate,
-    UserPasswordUpdate, UserRegister, UserResponse,
+    UserPasswordUpdate, UserRegister, UserResponse, UserLoginPassword
 )
 from app.services.auth_service import AuthService
 
@@ -20,6 +20,13 @@ def login(data: UserLogin, db: Session = Depends(get_db)):
     """手机验证码登录"""
     service = AuthService(db)
     return service.login(data)
+
+
+@router.post("/login/password", response_model=TokenResponse)
+def login_via_password(data: UserLoginPassword, db: Session = Depends(get_db)):
+    """密码登录"""
+    service = AuthService(db)
+    return service.login_via_password(data)
 
 
 @router.post("/register", response_model=TokenResponse)

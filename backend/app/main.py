@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1 import auth, products, quotes, klines, global_config, user_config, warns
 from app.config import settings
 
+
 app = FastAPI(
     title=settings.APP_NAME,
     description="融通金 - 黄金回收/交易平台 API",

@@ -25,6 +25,12 @@ export interface UserLogin {
   code: string;
 }
 
+export interface UserLoginPassword {
+  phone: string;
+  password: string;
+  agree_protocol: boolean;
+}
+
 export interface UserAvatarUpdate {
   avatar: string;
 }

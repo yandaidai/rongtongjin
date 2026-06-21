@@ -14,6 +14,7 @@ class User(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     phone: Mapped[str] = mapped_column(String(20), unique=True, nullable=False, comment="手机号")
     nickname: Mapped[str] = mapped_column(String(50), nullable=True, comment="用户昵称")
+    email: Mapped[str] = mapped_column(String(100), unique=True, nullable=True, comment="用户邮箱")
     avatar: Mapped[str] = mapped_column(String(255), nullable=True, comment="用户头像URL")
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=True, comment="密码哈希（可为空，验证码注册用户可后续设置）")
     status: Mapped[bool] = mapped_column(Boolean, default=True, comment="状态：1-正常 0-禁用")
@@ -25,4 +26,4 @@ class User(Base):
     )
 
     def __repr__(self) -> str:
-        return f"<User(id={self.id}, phone={self.phone})>"
+        return f"<User(id={self.id}, phone={self.phone}, email={self.email})>"

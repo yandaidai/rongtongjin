@@ -19,6 +19,13 @@ class UserLogin(BaseModel):
     code: str  # 验证码
 
 
+class UserLoginPassword(BaseModel):
+    """用户登录请求（密码方式）"""
+    phone: str
+    password: str
+    agree_protocol: bool = False  # 是否同意用户使用协议和隐私政策
+
+
 class UserResponse(BaseModel):
     """用户信息响应"""
     id: int

@@ -44,3 +44,13 @@ def test_get_all_products_exception(client):
         assert response.status_code == 500
         data = response.json()
         assert data["detail"] == "Failed to fetch products"
+
+
+def test_get_all_products_db_exception(client):
+    """测试获取所有启用的贵金属品种发生数据库异常的情况"""
+    with patch("app.api.v1.products.ProductService.get_all_products") as mock_get_all:
+        mock_get_all.side_effect = Exception("Database connection error")
+        response = client.get("/api/products/")
+        assert response.status_code == 500
+        data = response.json()
+        assert data["detail"] == "Database connection error"

@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     # 应用配置
     APP_NAME: str = "融通金 API"
     DEBUG: bool = True
+    ENVIRONMENT: str = "development"  # 可选值：development, production, testing，pydantic_settings 会自动从环境变量 ENVIRONMENT 读取覆盖默认值
 
     # 数据库配置
     DB_HOST: str = "localhost"
@@ -18,7 +19,7 @@ class Settings(BaseSettings):
     DB_USER: str = "root"
     DB_PASSWORD: str = "root"
     DB_NAME: str = "rongtongjin"
-    DATABASE_URL: str = ""
+    DATABASE_URL: str = "" # 可选的完整数据库 URL，优先级高于单独的 DB_* 配置项，方便测试覆盖和生产环境配置管理，pydantic_settings 会自动从环境变量 DATABASE_URL 读取覆盖默认值
 
     @property
     def db_url(self) -> str:
@@ -27,7 +28,7 @@ class Settings(BaseSettings):
         return f"mysql+pymysql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}?charset=utf8mb4"
 
     # JWT 配置
-    SECRET_KEY: str = "your-secret-key-change-in-production"
+    SECRET_KEY: str = ""
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24 小时
 

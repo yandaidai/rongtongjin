@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from apscheduler.schedulers.background import BackgroundScheduler
 
 from app.constants import INTERNATIONAL_CODE_MAP, SGE_SYMBOLS
-from app.database import get_db_session
+from app.database import get_db
 from app.models.metal_kline import MetalKline
 from app.models.metal_product import MetalProduct
 from app.models.metal_quote import MetalQuote
@@ -19,7 +19,7 @@ scheduler = BackgroundScheduler()
 
 def refresh_quotes():
     """定时刷新所有品种的大盘行情并保存到数据库"""
-    db = get_db_session()
+    db = get_db()
     try:
         products = db.query(MetalProduct).filter(MetalProduct.status == True).all()
         now = datetime.now(timezone.utc)

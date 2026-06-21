@@ -2,18 +2,21 @@
 
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
+import logging
 
 from app.core.security import create_access_token, hash_password, verify_password
 from app.models.user import User
 from app.schemas.user import (
     TokenResponse, UserLogin, UserRegister, UserResponse,
     UserAvatarUpdate, UserNicknameUpdate, UserPasswordUpdate,
+    UserLoginPassword
 )
 
 
 class AuthService:
     def __init__(self, db: Session):
         self.db = db
+        self.logger = logging.getLogger("AuthService")
 
     def _generate_code(self) -> str:
         """模拟生成验证码（生产环境接入真实短信服务）"""
@@ -64,6 +67,8 @@ class AuthService:
 
         # 检查手机号是否已注册
         existing_user = self.db.query(User).filter(User.phone == data.phone).first()
+        self.logger.info(f"API内部使用的 db 对象 ID: {id(self.db)}")
+        self.logger.info(f"注册尝试 - 手机号: {data.phone}, 已存在用户: {existing_user is not None}")
         if existing_user:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -107,6 +112,42 @@ class AuthService:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="账户已被禁用",
+            )
+
+        # 生成 token
+        token = create_access_token(data={"sub": user.id})
+        return TokenResponse(
+            access_token=token,
+            user=UserResponse.model_validate(user),
+        )
+
+    def login_via_password(self, data: UserLoginPassword) -> TokenResponse:
+        """用户登录（密码方式）"""
+        # 查找用户
+        user = self.db.query(User).filter(User.phone == data.phone).first()
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="该手机号未注册",
+            )
+
+        if not user.status:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="账户已被禁用",
+            )
+
+        if not user.hashed_password:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="该账号未设置密码，请使用验证码登录",
+            )
+
+        # 验证密码
+        if not verify_password(data.password, user.hashed_password):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="密码错误",
             )
 
         # 生成 token

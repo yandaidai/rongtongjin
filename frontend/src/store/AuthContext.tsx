@@ -7,6 +7,7 @@ interface AuthState {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (phone: string, code: string) => Promise<void>;
+  loginViaPassword: (phone: string, password: string, agree: boolean) => Promise<void>;
   register: (phone: string, code: string, agree: boolean) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -37,6 +38,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(res.user);
   };
 
+  const loginViaPassword = async (phone: string, password: string, agree: boolean) => {
+    const res = await api.loginViaPassword(phone, password, agree);
+    await api.setToken(res.access_token);
+    setUser(res.user);
+  };
+
   const register = async (phone: string, code: string, agree: boolean) => {
     const res = await api.register(phone, code, agree);
     await api.setToken(res.access_token);
@@ -60,6 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         isAuthenticated: !!user,
         login,
+        loginViaPassword,
         register,
         logout,
         refreshUser,
