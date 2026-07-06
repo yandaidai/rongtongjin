@@ -128,3 +128,6 @@ class AkshareService:
         except Exception:
             logger.exception("akshare 国际行情查询失败: %s", name_keyword)
             return None
+
+
+akshare_service = AkshareService()

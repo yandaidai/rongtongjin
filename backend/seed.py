@@ -48,7 +48,7 @@ def main():
         engine = create_engine(db_url, connect_args={"check_same_thread": False})
         Base.metadata.create_all(bind=engine)
     else:
-        from app.config import settings
+        from backend.core.conf import settings
         db_url = settings.db_url
         engine = create_engine(db_url)
 

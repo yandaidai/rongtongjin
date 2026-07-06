@@ -5,8 +5,8 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
-from app.core.dependencies import get_current_user_optional
-from app.database import get_db
+from backend.core.dependencies import get_current_user
+from backend.database.db import get_db
 from app.models.user import User
 from app.schemas.metal_quote import MetalProductQuoteResponse, MetalQuoteResponse
 from app.services.quote_service import QuoteService
@@ -17,7 +17,7 @@ router = APIRouter(prefix="/quotes", tags=["实时行情"])
 @router.get("/", response_model=list[MetalProductQuoteResponse])
 def get_quotes(
     db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_current_user_optional),
+    current_user: Optional[User] = Depends(get_current_user),
 ):
     """获取所有产品的实时行情（含销售价、回购价、点差）
     如果用户已登录，会优先使用用户自定义点差配置
@@ -30,7 +30,7 @@ def get_quotes(
 @router.get("/domestic", response_model=list[MetalProductQuoteResponse])
 def get_domestic_quotes(
     db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_current_user_optional),
+    current_user: Optional[User] = Depends(get_current_user),
 ):
     """获取国内大盘行情（黄金9999、黄金延期、白银延期、铂金9995等）"""
     service = QuoteService(db)
@@ -41,7 +41,7 @@ def get_domestic_quotes(
 @router.get("/international", response_model=list[MetalProductQuoteResponse])
 def get_international_quotes(
     db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_current_user_optional),
+    current_user: Optional[User] = Depends(get_current_user),
 ):
     """获取国际大盘行情（现货黄金、白银、铂金、COMEX等）"""
     service = QuoteService(db)

@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from apscheduler.schedulers.background import BackgroundScheduler
 
 from app.constants import INTERNATIONAL_CODE_MAP, SGE_SYMBOLS
-from app.database import get_db
+from backend.database.db import get_db
 from app.models.metal_kline import MetalKline
 from app.models.metal_product import MetalProduct
 from app.models.metal_quote import MetalQuote

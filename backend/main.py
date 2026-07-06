@@ -1,5 +1,5 @@
 """融通金 API - FastAPI 应用入口"""
 
-from app.main import app
+from backend.core.registrar import register_app
 
-__all__ = ["app"]
+app = register_app()

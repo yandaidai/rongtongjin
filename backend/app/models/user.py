@@ -5,7 +5,7 @@ from datetime import datetime
 from sqlalchemy import Boolean, DateTime, String, func
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.database import Base
+from backend.common.model import Base
 
 
 class User(Base):
@@ -17,13 +17,13 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(100), unique=True, nullable=True, comment="用户邮箱")
     avatar: Mapped[str] = mapped_column(String(255), nullable=True, comment="用户头像URL")
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=True, comment="密码哈希（可为空，验证码注册用户可后续设置）")
-    status: Mapped[bool] = mapped_column(Boolean, default=True, comment="状态：1-正常 0-禁用")
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), comment="创建时间"
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), comment="更新时间"
     )
+    status: Mapped[bool] = mapped_column(Boolean, default=True, comment="状态：1-正常 0-禁用")
 
     def __repr__(self) -> str:
         return f"<User(id={self.id}, phone={self.phone}, email={self.email})>"

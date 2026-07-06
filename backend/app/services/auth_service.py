@@ -1,49 +1,52 @@
 """用户认证服务 - 手机验证码方式"""
 
-from fastapi import HTTPException, status
-from sqlalchemy.orm import Session
-import logging
+from datetime import timedelta
 
-from app.core.security import create_access_token, hash_password, verify_password
+from jose import jwt as jose_jwt
+from fastapi import HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+
+from app.utils.password_security import password_security
 from app.models.user import User
 from app.schemas.user import (
     TokenResponse, UserLogin, UserRegister, UserResponse,
     UserAvatarUpdate, UserNicknameUpdate, UserPasswordUpdate,
     UserLoginPassword
 )
+from app.crud.crud_user import crud_user
+from backend.core.conf import settings
+from backend.utils.timezone import timezone
 
 
 class AuthService:
-    def __init__(self, db: Session):
-        self.db = db
-        self.logger = logging.getLogger("AuthService")
+    """认证服务"""
 
-    def _generate_code(self) -> str:
-        """模拟生成验证码（生产环境接入真实短信服务）"""
-        return "123456"  # 开发环境固定验证码
+    @staticmethod
+    def _create_access_token(user_id: int, is_superuser: bool = False) -> str:
+        """生成访问令牌"""
+        expire = timezone.now() + timedelta(seconds=settings.TOKEN_EXPIRE_SECONDS)
+        to_encode = {
+            "sub": str(user_id),
+            "exp": expire,
+            "is_superuser": is_superuser,
+            "type": "access",
+        }
+        return jose_jwt.encode(to_encode, settings.TOKEN_SECRET_KEY, algorithm=settings.TOKEN_ALGORITHM)
 
-    def _verify_code(self, code: str) -> bool:
-        """验证验证码（生产环境接入真实短信服务）"""
-        # 开发环境：固定验证码 123456
-        return code == "123456"
-    
-    def _verify_phone_format(self, phone: str) -> bool:
-        """验证手机号格式"""
-        import re
-        pattern = re.compile(r"^\d{10,15}$")
-        return bool(pattern.match(phone))
+    @staticmethod
+    def _create_refresh_token(user_id: int) -> str:
+        """创建刷新令牌"""
+        expire = timezone.now() + timedelta(seconds=settings.TOKEN_REFRESH_EXPIRE_SECONDS)
+        to_encode = {
+            'sub': user_id,
+            'type': 'refresh',
+            'exp': expire,
+        }
+        return jose_jwt.encode(to_encode, settings.TOKEN_SECRET_KEY, algorithm=settings.TOKEN_ALGORITHM)
 
-    def _get_user_or_404(self, user_id: int) -> User:
-        """获取用户，不存在则抛 404"""
-        user = self.db.query(User).filter(User.id == user_id).first()
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="用户不存在",
-            )
-        return user
-
-    def register(self, data: UserRegister) -> TokenResponse:
+    @staticmethod
+    async def register(db: AsyncSession, data: UserRegister) -> TokenResponse:
         """用户注册（手机验证码方式）"""
         if not data.agree_protocol:
             raise HTTPException(
@@ -51,25 +54,24 @@ class AuthService:
                 detail="请先同意用户使用协议和隐私政策",
             )
 
-        # 验证验证码
-        if not self._verify_code(data.code):
+        # 验证验证码（开发环境固定为 123456）
+        if data.code != "123456":
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="验证码错误",
             )
-    
+
         # 验证手机号格式
-        if not self._verify_phone_format(data.phone):
+        import re
+        if not re.match(r"^\d{10,15}$", data.phone):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="手机号格式错误",
             )
 
         # 检查手机号是否已注册
-        existing_user = self.db.query(User).filter(User.phone == data.phone).first()
-        self.logger.info(f"API内部使用的 db 对象 ID: {id(self.db)}")
-        self.logger.info(f"注册尝试 - 手机号: {data.phone}, 已存在用户: {existing_user is not None}")
-        if existing_user:
+        existing = await db.execute(select(User).where(User.phone == data.phone))
+        if existing.scalar_one_or_none():
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="该手机号已注册",
@@ -78,30 +80,32 @@ class AuthService:
         # 创建用户
         user = User(
             phone=data.phone,
-            nickname=f"用户{data.phone[-4:]}",  # 默认昵称：用户+手机号后4位
+            nickname=f"用户{data.phone[-4:]}",
         )
-        self.db.add(user)
-        self.db.commit()
-        self.db.refresh(user)
+        db.add(user)
+        await db.commit()
+        await db.refresh(user)
 
         # 生成 token
-        token = create_access_token(data={"sub": user.id})
+        token = AuthService._create_access_token(user.id)
         return TokenResponse(
             access_token=token,
             user=UserResponse.model_validate(user),
         )
 
-    def login(self, data: UserLogin) -> TokenResponse:
+    @staticmethod
+    async def login(db: AsyncSession, data: UserLogin) -> TokenResponse:
         """用户登录（手机验证码方式）"""
         # 验证验证码
-        if not self._verify_code(data.code):
+        if data.code != "123456":
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="验证码错误",
             )
 
         # 查找用户
-        user = self.db.query(User).filter(User.phone == data.phone).first()
+        result = await db.execute(select(User).where(User.phone == data.phone))
+        user = result.scalar_one_or_none()
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -115,16 +119,18 @@ class AuthService:
             )
 
         # 生成 token
-        token = create_access_token(data={"sub": user.id})
+        token = AuthService._create_access_token(user.id)
         return TokenResponse(
             access_token=token,
             user=UserResponse.model_validate(user),
         )
 
-    def login_via_password(self, data: UserLoginPassword) -> TokenResponse:
+    @staticmethod
+    async def login_via_password(db: AsyncSession, data: UserLoginPassword) -> TokenResponse:
         """用户登录（密码方式）"""
         # 查找用户
-        user = self.db.query(User).filter(User.phone == data.phone).first()
+        result = await db.execute(select(User).where(User.phone == data.phone))
+        user = result.scalar_one_or_none()
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -144,50 +150,67 @@ class AuthService:
             )
 
         # 验证密码
-        if not verify_password(data.password, user.hashed_password):
+        if not password_security.verify(data.password, user.hashed_password):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="密码错误",
             )
 
         # 生成 token
-        token = create_access_token(data={"sub": user.id})
+        token = AuthService._create_access_token(user.id)
         return TokenResponse(
             access_token=token,
             user=UserResponse.model_validate(user),
         )
 
-    def get_user_by_id(self, user_id: int) -> UserResponse:
+    @staticmethod
+    async def get_user_by_id(db: AsyncSession, user_id: int) -> UserResponse:
         """获取用户信息"""
-        user = self._get_user_or_404(user_id)
+        user = await crud_user.get_by_id(db, user_id)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="用户不存在",
+            )
         return UserResponse.model_validate(user)
 
-    def update_avatar(self, user_id: int, data: UserAvatarUpdate) -> UserResponse:
+    @staticmethod
+    async def update_avatar(db: AsyncSession, user_id: int, data: UserAvatarUpdate) -> UserResponse:
         """更新用户头像"""
-        user = self._get_user_or_404(user_id)
-        user.avatar = data.avatar
-        self.db.commit()
-        self.db.refresh(user)
+        user = await crud_user.update_avatar(db, user_id=user_id, avatar_url=data.avatar)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="用户不存在",
+            )
         return UserResponse.model_validate(user)
 
-    def update_nickname(self, user_id: int, data: UserNicknameUpdate) -> UserResponse:
+    @staticmethod
+    async def update_nickname(db: AsyncSession, user_id: int, data: UserNicknameUpdate) -> UserResponse:
         """更新用户昵称"""
-        user = self._get_user_or_404(user_id)
-        user.nickname = data.nickname
-        self.db.commit()
-        self.db.refresh(user)
+        user = await crud_user.update_nickname(db, user_id=user_id, nickname=data.nickname)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="用户不存在",
+            )
         return UserResponse.model_validate(user)
 
-    def set_password(self, user_id: int, data: UserPasswordUpdate) -> dict:
+    @staticmethod
+    async def set_password(db: AsyncSession, user_id: int, data: UserPasswordUpdate) -> dict:
         """设置/更新密码"""
-        user = self._get_user_or_404(user_id)
-        user.hashed_password = hash_password(data.password)
-        self.db.commit()
+        user = await crud_user.get_by_id(db, user_id)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="用户不存在",
+            )
+        user.hashed_password = password_security.hash(data.password)
+        await db.commit()
         return {"message": "密码设置成功"}
 
-    def deactivate_account(self, user_id: int) -> dict:
+    @staticmethod
+    async def deactivate_account(db: AsyncSession, user_id: int) -> dict:
         """注销账号"""
-        user = self._get_user_or_404(user_id)
-        user.status = False
-        self.db.commit()
+        await crud_user.deactivate_account(db, user_id=user_id)
         return {"message": "账号已注销"}

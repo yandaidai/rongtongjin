@@ -3,8 +3,8 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app.core.dependencies import get_current_user
-from app.database import get_db
+from backend.core.dependencies import get_current_user
+from backend.database.db import get_db
 from app.models.user import User
 from app.schemas.metal_user_config import MetalUserConfigResponse, MetalUserConfigUpdate
 from app.services.config_service import UserConfigService
