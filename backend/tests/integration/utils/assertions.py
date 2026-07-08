@@ -1,6 +1,7 @@
 """通用测试断言工具"""
 
 from typing import Any
+import logging
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -31,6 +32,7 @@ def assert_api_success(response: HttpxResponse, expected_status: int = 200) -> d
     Raises:
         AssertionError: 任一验证失败
     """
+    logging.info(f"断言API 响应体: {response.text}")
     assert response.status_code == expected_status, (
         f'HTTP 状态码不匹配: 期望 {expected_status}, 实际 {response.status_code}\n'
         f'响应内容: {response.text}'
@@ -66,6 +68,7 @@ def assert_api_error(
     Returns:
         完整的 JSON body
     """
+    logger.info(f"断言API 响应体: {response.text}")
     assert response.status_code == expected_http_status, (
         f'HTTP 状态码不匹配: 期望 {expected_http_status}, 实际 {response.status_code}\n'
         f'响应内容: {response.text}'

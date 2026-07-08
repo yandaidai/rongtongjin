@@ -106,5 +106,4 @@ class JwtAuthMiddleware(AuthenticationBackend):
         return ResponseModel.fail(
             msg='认证失败，请重新登录',
             code=CustomResponseCode.TOKEN_INVALID,
-            status_code=StandardResponseCode.HTTP_401,
-        )
+        ).to_response(status_code=StandardResponseCode.HTTP_401)

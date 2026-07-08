@@ -4,6 +4,8 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.metal_product import MetalProduct
 
+from tests.integration.utils.assertions import assert_api_success
+
 
 async def _seed_products(db: AsyncSession):
     """插入测试数据"""
@@ -20,8 +22,7 @@ async def _seed_products(db: AsyncSession):
 async def test_get_products_empty(async_client: AsyncClient):
     """测试获取品种列表（空数据）"""
     response = await async_client.get("/api/products/")
-    assert response.status_code == 200
-    assert response.json() == []
+    assert_api_success(response)
 
 
 async def test_get_products(async_client: AsyncClient, db: AsyncSession):
@@ -29,7 +30,9 @@ async def test_get_products(async_client: AsyncClient, db: AsyncSession):
     await _seed_products(db)
 
     response = await async_client.get("/api/products/")
-    assert response.status_code == 200
+    assert_api_success(response)
     data = response.json()
     assert len(data) == 3
     assert data[0]["code"] == "Au99.99"
+    assert data[1]["code"] == "Ag99.99"
+    assert data[2]["code"] == "Pt99.95"

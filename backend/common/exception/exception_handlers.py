@@ -19,12 +19,11 @@ async def base_exception_handler(request: Request, exc: BaseException) -> Any:
         code=exc.code,
         msg=exc.msg,
     )
-    return ResponseModel.response(
+    return ResponseModel(
         code=exc.code,
         msg=exc.msg,
         data=exc.data,
-        status_code=exc.status_code,
-    )
+    ).to_response(status_code=exc.status_code)
 
 
 async def validation_exception_handler(request: Request, exc: RequestValidationError) -> Any:
@@ -48,8 +47,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     return ResponseModel.fail(
         msg=error_msg,
         code=StandardResponseCode.HTTP_422,
-        status_code=StandardResponseCode.HTTP_422,
-    )
+    ).to_response(status_code=StandardResponseCode.HTTP_422)
 
 
 async def http_exception_handler(request: Request, exc: StarletteHTTPException) -> Any:
@@ -65,8 +63,7 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException) 
     return ResponseModel.fail(
         msg=exc.detail,
         code=exc.status_code,
-        status_code=exc.status_code,
-    )
+    ).to_response(status_code=exc.status_code)
 
 
 async def internal_exception_handler(request: Request, exc: Exception) -> Any:
@@ -80,7 +77,7 @@ async def internal_exception_handler(request: Request, exc: Exception) -> Any:
 
     return ResponseModel.error(
         msg='Internal Server Error',
-    )
+    ).to_response(status_code=StandardResponseCode.HTTP_500)
 
 
 def register_exception(app: Any) -> None:
